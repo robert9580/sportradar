@@ -18,6 +18,13 @@ public class Scoreboard {
     }
 
     /**
+     * Update score for a match
+     */
+    public void updateScore(String homeTeam, int homeScore, String awayTeam, int awayScore) {
+
+    }
+
+    /**
      * Get summary of ongoing matches
      */
     public List<String> getSummary() {

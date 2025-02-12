@@ -5,9 +5,9 @@ import java.util.Objects;
 
 public class Match {
     private final String homeTeam;
-    private short homeScore;
+    private int homeScore;
     private final String awayTeam;
-    private short awayScore;
+    private int awayScore;
     private final LocalDateTime startTime;
 
     public Match(String homeTeam, String awayTeam) {
@@ -35,7 +35,7 @@ public class Match {
         return homeTeam;
     }
 
-    public short getHomeScore() {
+    public int getHomeScore() {
         return homeScore;
     }
 
@@ -43,7 +43,7 @@ public class Match {
         return awayTeam;
     }
 
-    public short getAwayScore() {
+    public int getAwayScore() {
         return awayScore;
     }
 

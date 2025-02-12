@@ -35,7 +35,7 @@ class ScoreboardTest {
         }
 
         @Test
-        void givenOneMatchScoreboard_whenStartNewNextMatch_thenSummaryExactlyThisTwoMatchesWithZeroScore() {
+        void givenOneMatchScoreboard_whenStartNewNextMatch_thenSummaryExactlyTheseTwoMatchesWithZeroScore() {
             //given
             Scoreboard scoreboard = new Scoreboard();
             scoreboard.startMatch(MEXICO, CANADA);
@@ -101,6 +101,74 @@ class ScoreboardTest {
             assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("One of the teams plays in ongoing matches");
         }
+    }
+
+    @Nested
+    class UpdateScore {
+
+        @Test
+        void givenTwoMatchScoreboard_whenUpdateScore_thenSummaryExactlyTheseMatchesWithUpdateScoreOne() {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+            scoreboard.startMatch(MEXICO, CANADA);
+            scoreboard.startMatch(SPAIN, BRAZIL);
+
+            //when
+            scoreboard.updateScore(MEXICO, 1, CANADA, 2);
+
+            //then
+            List<String> summary = scoreboard.getSummary();
+            assertThat(summary).containsExactly(MEXICO + " 1 - " + CANADA + " 2",
+                    SPAIN + " 0 - " + BRAZIL + " 0");
+        }
+
+        @Test
+        void givenOneMatchScoreboard_whenUpdateScoreNotExistMatch_thenExceptionThrow() {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+            scoreboard.startMatch(MEXICO, CANADA);
+
+            //when
+            Throwable thrown = catchThrowable(() ->scoreboard.updateScore(SPAIN, 1, BRAZIL, 2));
+
+            //then
+            assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Match not found for the given teams");
+        }
+
+        @Test
+        void givenOneMatchScoreboard_whenUpdateScoreMistakeHomeAndAwayTeamViceVersa_thenExceptionThrow() {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+            scoreboard.startMatch(MEXICO, CANADA);
+
+            //when
+            Throwable thrown = catchThrowable(() ->scoreboard.updateScore(CANADA, 1, MEXICO, 2));
+
+            //then
+            assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Match not found for the given teams");
+        }
+
+        @ParameterizedTest
+        @CsvSource(delimiter = '|', textBlock = """
+                 -1      | 1
+                 1       | -1
+                 -1      | -1
+                """)
+        void givenOneMatchScoreboard_whenUpdateNegativeScore_thenExceptionThrow(int homeScore, int awayScore) {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+            scoreboard.startMatch(MEXICO, CANADA);
+
+            //when
+            Throwable thrown = catchThrowable(() ->scoreboard.updateScore(MEXICO, homeScore, CANADA, awayScore));
+
+            //then
+            assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Match can't have a negative score");
+        }
+
     }
 
 }

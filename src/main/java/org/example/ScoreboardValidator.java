@@ -19,6 +19,11 @@ class ScoreboardValidator {
         validateScoresIsNotNegative(homeScore, awayScore);
     }
 
+    void validateFinishMatch(String homeTeam, String awayTeam) {
+        validateTeamsNameIsNotBlank(homeTeam, awayTeam);
+        validateTeamsNameIsNotTheSame(homeTeam, awayTeam);
+    }
+
     private void validateTeamsNameIsNotBlank(String homeTeam, String awayTeam) {
         if (isBlank(homeTeam) || isBlank(awayTeam)) {
             throw new IllegalArgumentException("Name of teams can't be blank");

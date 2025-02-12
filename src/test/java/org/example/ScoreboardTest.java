@@ -2,6 +2,8 @@ package org.example;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.List;
 
@@ -47,6 +49,26 @@ class ScoreboardTest {
                     SPAIN + " 0 - " + BRAZIL + " 0");
         }
 
+        @ParameterizedTest
+        @CsvSource(delimiter = '|', textBlock = """
+                             | Brazil
+                 Brazil      |
+                 ''          | Brazil
+                 Brazil      | ' '
+                 '    '      | ''
+                """)
+        void givenEmptyScoreboard_whenStartNewMatchWithTeamNameIsBlank_thenExceptionThrow(String homeTeam, String awayTeam) {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+
+            //when
+            Throwable thrown = catchThrowable(() -> scoreboard.startMatch(homeTeam, awayTeam));
+
+            //then
+            assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Name of teams can't be blank");
+        }
+
         @Test
         void givenEmptyScoreboard_whenStartNewMatchWithBoothTeamsTheSameName_thenExceptionThrow() {
             //given
@@ -57,21 +79,27 @@ class ScoreboardTest {
 
             //then
             assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("");
+                    .hasMessage("Name of the teams can't be the same");
         }
 
-        @Test
-        void givenOneMatchScoreboard_whenStartNewMatchWithTeamNameExists_thenExceptionThrow() {
+        @ParameterizedTest
+        @CsvSource(delimiter = '|', textBlock = """
+                 Mexico      | Brazil
+                 Brazil      | Mexico
+                 Canada      | Brazil
+                 Brazil      | Canada
+                """)
+        void givenOneMatchScoreboard_whenStartNewMatchWithTeamNameExists_thenExceptionThrow(String homeTeam, String awayTeam) {
             //given
             Scoreboard scoreboard = new Scoreboard();
             scoreboard.startMatch(MEXICO, CANADA);
 
             //when
-            Throwable thrown = catchThrowable(() -> scoreboard.startMatch(MEXICO, BRAZIL));
+            Throwable thrown = catchThrowable(() -> scoreboard.startMatch(homeTeam, awayTeam));
 
             //then
             assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("");
+                    .hasMessage("One of the teams plays in ongoing matches");
         }
     }
 

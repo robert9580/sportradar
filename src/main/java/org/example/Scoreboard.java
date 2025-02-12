@@ -7,12 +7,14 @@ import java.util.Set;
 public class Scoreboard {
 
     private final Set<Match> matches = new LinkedHashSet<>();
+    private final ScoreboardValidator validator = new ScoreboardValidator();
 
     /**
      * Start a new match
      */
     public void startMatch(String homeTeam, String awayTeam) {
-
+        validator.validateStartMatch(matches, homeTeam, awayTeam);
+        matches.add(new Match(homeTeam, awayTeam));
     }
 
     /**

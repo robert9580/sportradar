@@ -16,6 +16,12 @@ class ScoreboardTest {
     private static final String CANADA = "Canada";
     private static final String SPAIN = "Spain";
     private static final String BRAZIL = "Brazil";
+    private static final String GERMANY = "Germany";
+    private static final String FRANCE = "France";
+    private static final String URUGUAY = "Uruguay";
+    private static final String ITALY = "Italy";
+    private static final String ARGENTINA = "Argentina";
+    private static final String AUSTRALIA = "Australia";
 
 
     @Nested
@@ -162,7 +168,7 @@ class ScoreboardTest {
             scoreboard.startMatch(MEXICO, CANADA);
 
             //when
-            Throwable thrown = catchThrowable(() ->scoreboard.updateScore(SPAIN, 1, BRAZIL, 2));
+            Throwable thrown = catchThrowable(() -> scoreboard.updateScore(SPAIN, 1, BRAZIL, 2));
 
             //then
             assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -176,7 +182,7 @@ class ScoreboardTest {
             scoreboard.startMatch(MEXICO, CANADA);
 
             //when
-            Throwable thrown = catchThrowable(() ->scoreboard.updateScore(CANADA, 1, MEXICO, 2));
+            Throwable thrown = catchThrowable(() -> scoreboard.updateScore(CANADA, 1, MEXICO, 2));
 
             //then
             assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -195,7 +201,7 @@ class ScoreboardTest {
             scoreboard.startMatch(MEXICO, CANADA);
 
             //when
-            Throwable thrown = catchThrowable(() ->scoreboard.updateScore(MEXICO, homeScore, CANADA, awayScore));
+            Throwable thrown = catchThrowable(() -> scoreboard.updateScore(MEXICO, homeScore, CANADA, awayScore));
 
             //then
             assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -262,7 +268,7 @@ class ScoreboardTest {
             scoreboard.startMatch(MEXICO, CANADA);
 
             //when
-            Throwable thrown = catchThrowable(() ->scoreboard.finishMatch(SPAIN, BRAZIL));
+            Throwable thrown = catchThrowable(() -> scoreboard.finishMatch(SPAIN, BRAZIL));
 
             //then
             assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
@@ -276,11 +282,53 @@ class ScoreboardTest {
             scoreboard.startMatch(MEXICO, CANADA);
 
             //when
-            Throwable thrown = catchThrowable(() ->scoreboard.finishMatch(CANADA, MEXICO));
+            Throwable thrown = catchThrowable(() -> scoreboard.finishMatch(CANADA, MEXICO));
 
             //then
             assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("Match not found for the given teams");
+        }
+
+    }
+
+    @Nested
+    class GetSummary {
+
+        @Test
+        void givenFiveMatchScoreboard_whenGetSummary_thenSummaryExactlyFiveMatchOrderByTotalScoreAndStartTime() {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+            scoreboard.startMatch(MEXICO, CANADA);
+            scoreboard.startMatch(SPAIN, BRAZIL);
+            scoreboard.startMatch(GERMANY, FRANCE);
+            scoreboard.startMatch(URUGUAY, ITALY);
+            scoreboard.startMatch(ARGENTINA, AUSTRALIA);
+
+            //when
+            scoreboard.getSummary();
+
+            //then
+            List<String> summary = scoreboard.getSummary();
+            assertThat(summary).containsExactly(MEXICO + " 0 - " + CANADA + " 0",
+                    SPAIN + " 0 - " + BRAZIL + " 0",
+                    GERMANY + " 0 - " + FRANCE + " 0",
+                    URUGUAY + " 0 - " + ITALY + " 0",
+                    ARGENTINA + " 0 - " + AUSTRALIA + " 0");
+
+            //when
+            scoreboard.updateScore(MEXICO, 0, CANADA, 5);
+            scoreboard.updateScore(SPAIN, 10, BRAZIL, 2);
+            scoreboard.updateScore(GERMANY, 2, FRANCE, 2);
+            scoreboard.updateScore(URUGUAY, 6, ITALY, 6);
+            scoreboard.updateScore(ARGENTINA, 3, AUSTRALIA, 1);
+
+            //then
+            summary = scoreboard.getSummary();
+            assertThat(summary).containsExactly(URUGUAY + " 6 - " + ITALY + " 6",
+                    SPAIN + " 10 - " + BRAZIL + " 2",
+                    MEXICO + " 0 - " + CANADA + " 5",
+                    ARGENTINA + " 3 - " + AUSTRALIA + " 1",
+                    GERMANY + " 2 - " + FRANCE + " 2");
         }
 
     }

@@ -13,6 +13,12 @@ class ScoreboardValidator {
         validateTeamsIsNotPlayInOngoingMatches(matches, homeTeam, awayTeam);
     }
 
+    void validateUpdateScore(String homeTeam, int homeScore, String awayTeam, int awayScore) {
+        validateTeamsNameIsNotBlank(homeTeam, awayTeam);
+        validateTeamsNameIsNotTheSame(homeTeam, awayTeam);
+        validateScoresIsNotNegative(homeScore, awayScore);
+    }
+
     private void validateTeamsNameIsNotBlank(String homeTeam, String awayTeam) {
         if (isBlank(homeTeam) || isBlank(awayTeam)) {
             throw new IllegalArgumentException("Name of teams can't be blank");
@@ -28,6 +34,12 @@ class ScoreboardValidator {
     private void validateTeamsIsNotPlayInOngoingMatches(Set<Match> matches, String homeTeam, String awayTeam) {
         if (matches.stream().anyMatch(match -> match.getHomeTeam().equals(homeTeam) || match.getHomeTeam().equals(awayTeam) || match.getAwayTeam().equals(homeTeam) || match.getAwayTeam().equals(awayTeam))) {
             throw new IllegalArgumentException("One of the teams plays in ongoing matches");
+        }
+    }
+
+    private void validateScoresIsNotNegative(int homeScore, int awayScore) {
+        if (homeScore < 0 || awayScore < 0) {
+            throw new IllegalArgumentException("Match can't have a negative score");
         }
     }
 }

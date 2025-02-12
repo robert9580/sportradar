@@ -122,6 +122,39 @@ class ScoreboardTest {
                     SPAIN + " 0 - " + BRAZIL + " 0");
         }
 
+        @ParameterizedTest
+        @CsvSource(delimiter = '|', textBlock = """
+                             | Brazil
+                 Brazil      |
+                 ''          | Brazil
+                 Brazil      | ' '
+                 '    '      | ''
+                """)
+        void givenEmptyScoreboard_whenUpdateScoreWithTeamNameIsBlank_thenExceptionThrow(String homeTeam, String awayTeam) {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+
+            //when
+            Throwable thrown = catchThrowable(() -> scoreboard.updateScore(homeTeam, 0, awayTeam, 0));
+
+            //then
+            assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Name of teams can't be blank");
+        }
+
+        @Test
+        void givenEmptyScoreboard_whenUpdateScoreWithBoothTeamsTheSameName_thenExceptionThrow() {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+
+            //when
+            Throwable thrown = catchThrowable(() -> scoreboard.updateScore(MEXICO, 0, MEXICO, 0));
+
+            //then
+            assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Name of the teams can't be the same");
+        }
+
         @Test
         void givenOneMatchScoreboard_whenUpdateScoreNotExistMatch_thenExceptionThrow() {
             //given

@@ -51,4 +51,9 @@ public class Match {
         return startTime;
     }
 
+    void updateScore(int homeScore, int awayScore) {
+        this.homeScore = homeScore;
+        this.awayScore = awayScore;
+    }
+
 }

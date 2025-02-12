@@ -21,7 +21,13 @@ public class Scoreboard {
      * Update score for a match
      */
     public void updateScore(String homeTeam, int homeScore, String awayTeam, int awayScore) {
+        validator.validateUpdateScore(homeTeam, homeScore, awayTeam, awayScore);
+        Match matchToUpdate = matches.stream()
+                .filter(match -> match.getHomeTeam().equals(homeTeam) && match.getAwayTeam().equals(awayTeam))
+                .findAny()
+                .orElseThrow(() -> new IllegalArgumentException("Match not found for the given teams"));
 
+        matchToUpdate.updateScore(homeScore, awayScore);
     }
 
     /**

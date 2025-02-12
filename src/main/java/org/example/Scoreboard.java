@@ -18,7 +18,7 @@ public class Scoreboard {
     }
 
     /**
-     * Update score for a match
+     * Update score for ongoing match
      */
     public void updateScore(String homeTeam, int homeScore, String awayTeam, int awayScore) {
         validator.validateUpdateScore(homeTeam, homeScore, awayTeam, awayScore);
@@ -28,6 +28,13 @@ public class Scoreboard {
                 .orElseThrow(() -> new IllegalArgumentException("Match not found for the given teams"));
 
         matchToUpdate.updateScore(homeScore, awayScore);
+    }
+
+    /**
+     * Finish ongoing match
+     */
+    public void finishMatch(String homeTeam, String awayTeam) {
+
     }
 
     /**

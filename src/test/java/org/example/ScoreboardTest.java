@@ -204,4 +204,85 @@ class ScoreboardTest {
 
     }
 
+    @Nested
+    class FinishMatch {
+
+        @Test
+        void givenTwoMatchScoreboard_whenFinishMatch_thenSummaryExactlyOneOtherMatch() {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+            scoreboard.startMatch(MEXICO, CANADA);
+            scoreboard.startMatch(SPAIN, BRAZIL);
+
+            //when
+            scoreboard.finishMatch(MEXICO, CANADA);
+
+            //then
+            List<String> summary = scoreboard.getSummary();
+            assertThat(summary).containsExactly(SPAIN + " 0 - " + BRAZIL + " 0");
+        }
+
+        @ParameterizedTest
+        @CsvSource(delimiter = '|', textBlock = """
+                             | Brazil
+                 Brazil      |
+                 ''          | Brazil
+                 Brazil      | ' '
+                 '    '      | ''
+                """)
+        void givenEmptyScoreboard_whenFinishMatchWithTeamNameIsBlank_thenExceptionThrow(String homeTeam, String awayTeam) {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+
+            //when
+            Throwable thrown = catchThrowable(() -> scoreboard.finishMatch(homeTeam, awayTeam));
+
+            //then
+            assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Name of teams can't be blank");
+        }
+
+        @Test
+        void givenEmptyScoreboard_whenFinishMatchWithBoothTeamsTheSameName_thenExceptionThrow() {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+
+            //when
+            Throwable thrown = catchThrowable(() -> scoreboard.finishMatch(MEXICO, MEXICO));
+
+            //then
+            assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Name of the teams can't be the same");
+        }
+
+        @Test
+        void givenOneMatchScoreboard_whenFinishNotExistMatch_thenExceptionThrow() {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+            scoreboard.startMatch(MEXICO, CANADA);
+
+            //when
+            Throwable thrown = catchThrowable(() ->scoreboard.finishMatch(SPAIN, BRAZIL));
+
+            //then
+            assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Match not found for the given teams");
+        }
+
+        @Test
+        void givenOneMatchScoreboard_whenFinishMatchMistakeHomeAndAwayTeamViceVersa_thenExceptionThrow() {
+            //given
+            Scoreboard scoreboard = new Scoreboard();
+            scoreboard.startMatch(MEXICO, CANADA);
+
+            //when
+            Throwable thrown = catchThrowable(() ->scoreboard.finishMatch(CANADA, MEXICO));
+
+            //then
+            assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("Match not found for the given teams");
+        }
+
+    }
+
 }

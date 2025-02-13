@@ -7,10 +7,11 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 class ScoreboardValidator {
 
-    void validateStartMatch(Set<Match> matches, String homeTeam, String awayTeam) {
+    void validateStartMatch(String homeTeam, String awayTeam, Set<Match> ongoingMatches, Match newMatch) {
         validateTeamsNameIsNotBlank(homeTeam, awayTeam);
         validateTeamsNameIsNotTheSame(homeTeam, awayTeam);
-        validateTeamsIsNotPlayInOngoingMatches(matches, homeTeam, awayTeam);
+        validateTeamsIsNotPlayInOngoingMatches(homeTeam, awayTeam, ongoingMatches);
+        validateMatchIsNotTheSameStartTimeInOngoingMatches(newMatch, ongoingMatches);
     }
 
     void validateUpdateScore(String homeTeam, int homeScore, String awayTeam, int awayScore) {
@@ -36,9 +37,18 @@ class ScoreboardValidator {
         }
     }
 
-    private void validateTeamsIsNotPlayInOngoingMatches(Set<Match> matches, String homeTeam, String awayTeam) {
-        if (matches.stream().anyMatch(match -> match.getHomeTeam().equals(homeTeam) || match.getHomeTeam().equals(awayTeam) || match.getAwayTeam().equals(homeTeam) || match.getAwayTeam().equals(awayTeam))) {
+    private void validateTeamsIsNotPlayInOngoingMatches(String homeTeam, String awayTeam, Set<Match> ongoingMatches) {
+        if (ongoingMatches.stream().anyMatch(match -> match.getHomeTeam().equals(homeTeam) || match.getHomeTeam().equals(awayTeam) || match.getAwayTeam().equals(homeTeam) || match.getAwayTeam().equals(awayTeam))) {
             throw new IllegalArgumentException("One of the teams plays in ongoing matches");
+        }
+    }
+
+    /**
+     * https://stackoverflow.com/questions/31334698/understanding-treeset-when-compareto-returns-0
+     */
+    private void validateMatchIsNotTheSameStartTimeInOngoingMatches(Match newMatch, Set<Match> ongoingMatches) {
+        if (ongoingMatches.stream().anyMatch(match -> match.getStartTime().equals(newMatch.getStartTime()))) {
+            throw new IllegalStateException("One of the matches has exactly the same time start");
         }
     }
 

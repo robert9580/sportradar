@@ -1,21 +1,22 @@
 package org.example;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-class Match {
+class Match implements Comparable<Match> {
     private final String homeTeam;
     private int homeScore;
     private final String awayTeam;
     private int awayScore;
     private final LocalDateTime startTime;
 
-    public Match(String homeTeam, String awayTeam) {
+    public Match(String homeTeam, String awayTeam, Clock clock) {
         this.homeTeam = homeTeam;
         this.homeScore = 0;
         this.awayTeam = awayTeam;
         this.awayScore = 0;
-        this.startTime = LocalDateTime.now();
+        this.startTime = LocalDateTime.now(clock);
     }
 
     @Override
@@ -29,6 +30,15 @@ class Match {
     @Override
     public int hashCode() {
         return Objects.hash(homeTeam, awayTeam);
+    }
+
+    @Override
+    public int compareTo(Match other) {
+        int scoreComparison = Integer.compare(other.getTotalScore(), this.getTotalScore());
+        if (scoreComparison != 0) {
+            return scoreComparison;
+        }
+        return other.startTime.compareTo(this.startTime);
     }
 
     public String getHomeTeam() {
@@ -49,6 +59,10 @@ class Match {
 
     public LocalDateTime getStartTime() {
         return startTime;
+    }
+
+    public int getTotalScore() {
+        return homeScore + awayScore;
     }
 
     void updateScore(int homeScore, int awayScore) {

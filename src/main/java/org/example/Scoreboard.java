@@ -1,20 +1,27 @@
 package org.example;
 
-import java.util.LinkedHashSet;
+import java.time.Clock;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class Scoreboard {
 
-    private final Set<Match> ongoingMatches = new LinkedHashSet<>();
+    private final Set<Match> ongoingMatches = new TreeSet<>();
     private final ScoreboardValidator validator = new ScoreboardValidator();
+    private final Clock clock;
+
+    public Scoreboard(Clock clock) {
+        this.clock = clock;
+    }
 
     /**
      * Start a new match
      */
     public void startMatch(String homeTeam, String awayTeam) {
-        validator.validateStartMatch(ongoingMatches, homeTeam, awayTeam);
-        ongoingMatches.add(new Match(homeTeam, awayTeam));
+        Match newMatch = new Match(homeTeam, awayTeam, clock);
+        validator.validateStartMatch(homeTeam, awayTeam, ongoingMatches, newMatch);
+        ongoingMatches.add(newMatch);
     }
 
     /**
@@ -23,7 +30,9 @@ public class Scoreboard {
     public void updateScore(String homeTeam, int homeScore, String awayTeam, int awayScore) {
         validator.validateUpdateScore(homeTeam, homeScore, awayTeam, awayScore);
         Match matchToUpdate = findMatchFromOngoingMatches(homeTeam, awayTeam);
+        ongoingMatches.remove(matchToUpdate);
         matchToUpdate.updateScore(homeScore, awayScore);
+        ongoingMatches.add(matchToUpdate);
     }
 
     /**
@@ -36,7 +45,7 @@ public class Scoreboard {
     }
 
     /**
-     * Get summary of ongoing matches
+     * Get summary of ongoing matches ordered by firstly total score(desc) and secondary start time(desc)
      */
     public List<String> getSummary() {
         return ongoingMatches.stream()

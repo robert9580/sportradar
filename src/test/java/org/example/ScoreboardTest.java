@@ -4,7 +4,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.threeten.extra.MutableClock;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,6 +16,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 class ScoreboardTest {
 
+    private static final MutableClock clock = MutableClock.of(Instant.now(), ZoneId.of("UTC"));
     private static final String MEXICO = "Mexico";
     private static final String CANADA = "Canada";
     private static final String SPAIN = "Spain";
@@ -30,7 +35,7 @@ class ScoreboardTest {
         @Test
         void givenEmptyScoreboard_whenStartNewMatch_thenSummaryExactlyThisNewMatchWithZeroScore() {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
 
             //when
             scoreboard.startMatch(MEXICO, CANADA);
@@ -43,16 +48,17 @@ class ScoreboardTest {
         @Test
         void givenOneMatchScoreboard_whenStartNewNextMatch_thenSummaryExactlyTheseTwoMatchesWithZeroScore() {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
             scoreboard.startMatch(MEXICO, CANADA);
+            clock.add(1L, ChronoUnit.NANOS);
 
             //when
             scoreboard.startMatch(SPAIN, BRAZIL);
 
             //then
             List<String> summary = scoreboard.getSummary();
-            assertThat(summary).containsExactly(MEXICO + " 0 - " + CANADA + " 0",
-                    SPAIN + " 0 - " + BRAZIL + " 0");
+            assertThat(summary).containsExactly(SPAIN + " 0 - " + BRAZIL + " 0",
+                    MEXICO + " 0 - " + CANADA + " 0");
         }
 
         @ParameterizedTest
@@ -65,7 +71,7 @@ class ScoreboardTest {
                 """)
         void givenEmptyScoreboard_whenStartNewMatchWithTeamNameIsBlank_thenExceptionThrow(String homeTeam, String awayTeam) {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
 
             //when
             Throwable thrown = catchThrowable(() -> scoreboard.startMatch(homeTeam, awayTeam));
@@ -78,7 +84,7 @@ class ScoreboardTest {
         @Test
         void givenEmptyScoreboard_whenStartNewMatchWithBoothTeamsTheSameName_thenExceptionThrow() {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
 
             //when
             Throwable thrown = catchThrowable(() -> scoreboard.startMatch(MEXICO, MEXICO));
@@ -97,7 +103,7 @@ class ScoreboardTest {
                 """)
         void givenOneMatchScoreboard_whenStartNewMatchWithTeamNameExists_thenExceptionThrow(String homeTeam, String awayTeam) {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
             scoreboard.startMatch(MEXICO, CANADA);
 
             //when
@@ -107,6 +113,20 @@ class ScoreboardTest {
             assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
                     .hasMessage("One of the teams plays in ongoing matches");
         }
+
+        @Test
+        void givenOneMatchScoreboard_whenStartNewMatchWithTheSameStartTime_thenExceptionThrow() {
+            //given
+            Scoreboard scoreboard = new Scoreboard(clock);
+            scoreboard.startMatch(MEXICO, CANADA);
+
+            //when
+            Throwable thrown = catchThrowable(() -> scoreboard.startMatch(SPAIN, BRAZIL));
+
+            //then
+            assertThat(thrown).isInstanceOf(IllegalStateException.class)
+                    .hasMessage("One of the matches has exactly the same time start");
+        }
     }
 
     @Nested
@@ -115,8 +135,9 @@ class ScoreboardTest {
         @Test
         void givenTwoMatchScoreboard_whenUpdateScore_thenSummaryExactlyTheseMatchesWithUpdateScoreOne() {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
             scoreboard.startMatch(MEXICO, CANADA);
+            clock.add(1L, ChronoUnit.NANOS);
             scoreboard.startMatch(SPAIN, BRAZIL);
 
             //when
@@ -138,7 +159,7 @@ class ScoreboardTest {
                 """)
         void givenEmptyScoreboard_whenUpdateScoreWithTeamNameIsBlank_thenExceptionThrow(String homeTeam, String awayTeam) {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
 
             //when
             Throwable thrown = catchThrowable(() -> scoreboard.updateScore(homeTeam, 0, awayTeam, 0));
@@ -151,7 +172,7 @@ class ScoreboardTest {
         @Test
         void givenEmptyScoreboard_whenUpdateScoreWithBoothTeamsTheSameName_thenExceptionThrow() {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
 
             //when
             Throwable thrown = catchThrowable(() -> scoreboard.updateScore(MEXICO, 0, MEXICO, 0));
@@ -164,7 +185,7 @@ class ScoreboardTest {
         @Test
         void givenOneMatchScoreboard_whenUpdateScoreNotExistMatch_thenExceptionThrow() {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
             scoreboard.startMatch(MEXICO, CANADA);
 
             //when
@@ -178,7 +199,7 @@ class ScoreboardTest {
         @Test
         void givenOneMatchScoreboard_whenUpdateScoreMistakeHomeAndAwayTeamViceVersa_thenExceptionThrow() {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
             scoreboard.startMatch(MEXICO, CANADA);
 
             //when
@@ -197,7 +218,7 @@ class ScoreboardTest {
                 """)
         void givenOneMatchScoreboard_whenUpdateNegativeScore_thenExceptionThrow(int homeScore, int awayScore) {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
             scoreboard.startMatch(MEXICO, CANADA);
 
             //when
@@ -216,8 +237,9 @@ class ScoreboardTest {
         @Test
         void givenTwoMatchScoreboard_whenFinishMatch_thenSummaryExactlyOneOtherMatch() {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
             scoreboard.startMatch(MEXICO, CANADA);
+            clock.add(1L, ChronoUnit.NANOS);
             scoreboard.startMatch(SPAIN, BRAZIL);
 
             //when
@@ -238,7 +260,7 @@ class ScoreboardTest {
                 """)
         void givenEmptyScoreboard_whenFinishMatchWithTeamNameIsBlank_thenExceptionThrow(String homeTeam, String awayTeam) {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
 
             //when
             Throwable thrown = catchThrowable(() -> scoreboard.finishMatch(homeTeam, awayTeam));
@@ -251,7 +273,7 @@ class ScoreboardTest {
         @Test
         void givenEmptyScoreboard_whenFinishMatchWithBoothTeamsTheSameName_thenExceptionThrow() {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
 
             //when
             Throwable thrown = catchThrowable(() -> scoreboard.finishMatch(MEXICO, MEXICO));
@@ -264,7 +286,7 @@ class ScoreboardTest {
         @Test
         void givenOneMatchScoreboard_whenFinishNotExistMatch_thenExceptionThrow() {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
             scoreboard.startMatch(MEXICO, CANADA);
 
             //when
@@ -278,7 +300,7 @@ class ScoreboardTest {
         @Test
         void givenOneMatchScoreboard_whenFinishMatchMistakeHomeAndAwayTeamViceVersa_thenExceptionThrow() {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
             scoreboard.startMatch(MEXICO, CANADA);
 
             //when
@@ -295,13 +317,17 @@ class ScoreboardTest {
     class GetSummary {
 
         @Test
-        void givenFiveMatchScoreboard_whenGetSummary_thenSummaryExactlyFiveMatchOrderByTotalScoreAndStartTime() {
+        void givenFiveMatchScoreboard_whenGetSummary_thenSummaryExactlyFiveMatchOrderByTotalScoreAndStartTimeDesc() {
             //given
-            Scoreboard scoreboard = new Scoreboard();
+            Scoreboard scoreboard = new Scoreboard(clock);
             scoreboard.startMatch(MEXICO, CANADA);
+            clock.add(1L, ChronoUnit.NANOS);
             scoreboard.startMatch(SPAIN, BRAZIL);
+            clock.add(1L, ChronoUnit.NANOS);
             scoreboard.startMatch(GERMANY, FRANCE);
+            clock.add(1L, ChronoUnit.NANOS);
             scoreboard.startMatch(URUGUAY, ITALY);
+            clock.add(1L, ChronoUnit.NANOS);
             scoreboard.startMatch(ARGENTINA, AUSTRALIA);
 
             //when
@@ -309,11 +335,11 @@ class ScoreboardTest {
 
             //then
             List<String> summary = scoreboard.getSummary();
-            assertThat(summary).containsExactly(MEXICO + " 0 - " + CANADA + " 0",
-                    SPAIN + " 0 - " + BRAZIL + " 0",
-                    GERMANY + " 0 - " + FRANCE + " 0",
+            assertThat(summary).containsExactly(ARGENTINA + " 0 - " + AUSTRALIA + " 0",
                     URUGUAY + " 0 - " + ITALY + " 0",
-                    ARGENTINA + " 0 - " + AUSTRALIA + " 0");
+                    GERMANY + " 0 - " + FRANCE + " 0",
+                    SPAIN + " 0 - " + BRAZIL + " 0",
+                    MEXICO + " 0 - " + CANADA + " 0");
 
             //when
             scoreboard.updateScore(MEXICO, 0, CANADA, 5);
